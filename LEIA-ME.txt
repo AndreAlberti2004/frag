@@ -1,0 +1,44 @@
+FRAG - como colocar no ar de graca (sem ngrok, sem cartao)
+============================================================
+
+Voce precisa de duas contas gratuitas: GitHub (guarda os arquivos) e Render (roda o servidor).
+Tempo total: uns 10 minutos, tudo pelo navegador. Nao precisa instalar nada.
+
+PASSO 1 - GitHub
+  1. Entre em https://github.com (crie a conta se nao tiver).
+  2. Clique no "+" no canto superior direito > "New repository".
+     Nome: frag   |   Public   |   marque "Add a README file"   > "Create repository".
+  3. Na pagina do repositorio: botao "Add file" > "Upload files".
+  4. Arraste TODOS os arquivos desta pasta para a area de upload:
+        frag.html   server.py   jogar.py   render.yaml   requirements.txt   Procfile   LEIA-ME.txt
+  5. Clique em "Commit changes" (botao verde embaixo). Espere terminar.
+
+PASSO 2 - Render
+  1. Entre em https://render.com > "Get Started" > entre com a conta do GitHub.
+  2. No painel: "New +" > "Blueprint".
+  3. Conecte o repositorio "frag" (se nao aparecer, clique em "Configure account" e libere o repositorio).
+  4. O Render le o render.yaml sozinho. Clique em "Apply" (ou "Deploy Blueprint").
+  5. Espere o status ficar "Live" (2 a 4 minutos na primeira vez).
+  6. O link aparece no topo, algo como  https://frag-xxxx.onrender.com
+     Esse e o link para mandar para a galera. Pronto.
+
+COMO JOGAR
+  - Voce abre o link, clica em "Criar sala", poe o nome. O lobby mostra o link da sala (ja com o codigo).
+  - Manda esse link (ou so o codigo de 4 letras). Quem abrir entra na sua sala.
+  - Sua aba e a sala: se voce fechar, a sala acaba.
+
+AVISOS
+  - No plano gratis do Render o servidor "dorme" depois de 15 minutos sem ninguem. A primeira pessoa a abrir
+    o link espera uns 40 a 60 segundos (a pagina carrega em branco e depois aparece). Depois disso fica normal.
+    Dica: abra o link 1 minuto antes de chamar a galera.
+  - O servidor gratis fica nos EUA. Da uns 120 ms de ida e volta a partir do Brasil; como o tiro e decidido
+    no computador de quem atira, joga bem, so os outros jogadores aparecem um pouco atrasados.
+  - Para atualizar o jogo: suba um frag.html novo no GitHub (Add file > Upload files > commit). O Render
+    republica sozinho em 1 ou 2 minutos.
+
+ALTERNATIVA (se o Render nao funcionar): Koyeb, tambem gratis e sem cartao.
+  https://app.koyeb.com > Create Web Service > GitHub > repositorio frag > Run command: python server.py
+  > porta 8000 > Deploy. O link aparece no painel.
+
+MESMA REDE (escritorio), sem internet: continua valendo o jogar.py (python jogar.py), que precisa do server.py
+na mesma pasta. Se o link da rede local der timeout, use o Render acima.

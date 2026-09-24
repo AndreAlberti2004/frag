@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: frag
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    healthCheckPath: /status
+    autoDeploy: true
