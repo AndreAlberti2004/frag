@@ -8,7 +8,7 @@ FRAG - servidor (site + relay das partidas). Só biblioteca padrão do Python.
 
 Cada sala tem um anfitrião (a aba de quem criou) e convidados; o servidor só encaminha mensagens.
 """
-import base64, hashlib, json, os, socketserver, struct, sys, threading, time
+import base64, hashlib, json, os, socket, socketserver, struct, sys, threading, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(HERE, 'frag.html')
@@ -51,7 +51,9 @@ class Conn:
         self.gid = 0
 
     def send(self, obj):
-        data = json.dumps(obj, separators=(',', ':')).encode('utf-8')
+        self.send_raw(json.dumps(obj, separators=(',', ':')).encode('utf-8'))
+
+    def send_raw(self, data):
         n = len(data)
         if n < 126:
             head = struct.pack('!BB', 0x81, n)
@@ -136,6 +138,10 @@ class Handler(socketserver.BaseRequestHandler):
         accept = base64.b64encode(hashlib.sha1((key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode()).digest()).decode()
         self.request.sendall(('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: %s\r\n\r\n' % accept).encode())
         self.request.settimeout(None)
+        try:  # sem Nagle: mensagens pequenas saem na hora (menos atraso nos tiros e movimentos)
+            self.request.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        except Exception:
+            pass
         conn = Conn(self.request, self.client_address[0])
         try:
             while conn.alive:
@@ -149,8 +155,9 @@ class Handler(socketserver.BaseRequestHandler):
                     n = struct.unpack('!Q', self.recv_exact(8))[0]
                 mask = self.recv_exact(4) if masked else b''
                 payload = self.recv_exact(n) if n else b''
-                if masked:
-                    payload = bytes(payload[i] ^ mask[i % 4] for i in range(n))
+                if masked and n:
+                    k = (mask * (n // 4 + 1))[:n]
+                    payload = (int.from_bytes(payload, 'big') ^ int.from_bytes(k, 'big')).to_bytes(n, 'big')
                 if opcode == 0x8:
                     break
                 if opcode == 0x9:
@@ -196,7 +203,7 @@ class Handler(socketserver.BaseRequestHandler):
             for g in guests:  # anfitrião recriou a sala (F5): convidados reconectam sozinhos
                 g.send({'t': 'closed'})
                 g.close()
-            conn.send({'t': 'hosted', 'code': code})
+            conn.send({'t': 'hosted', 'code': code, 'v': 4})
             log('sala %s: anfitriao %s' % (code, conn.addr))
         elif t == 'join':
             code = str(m.get('code') or 'LOCAL').upper()[:8]
@@ -221,6 +228,11 @@ class Handler(socketserver.BaseRequestHandler):
             host = conn.room.host
             if host is not None:
                 host.send({'t': 'from', 'id': conn.gid, 'm': m.get('m')})
+        elif t == 'all' and conn.role == 'host' and conn.room is not None:
+            # um envio do anfitriao vira um para cada convidado (economiza o upload de quem hospeda)
+            data = json.dumps({'t': 'm', 'm': m.get('m')}, separators=(',', ':')).encode('utf-8')
+            for g in list(conn.room.guests.values()):
+                g.send_raw(data)
         elif t == 'to' and conn.role == 'host' and conn.room is not None:
             g = conn.room.guests.get(m.get('id'))
             if g is not None:

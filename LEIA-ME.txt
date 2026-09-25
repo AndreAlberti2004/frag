@@ -42,3 +42,58 @@ ALTERNATIVA (se o Render nao funcionar): Koyeb, tambem gratis e sem cartao.
 
 MESMA REDE (escritorio), sem internet: continua valendo o jogar.py (python jogar.py), que precisa do server.py
 na mesma pasta. Se o link da rede local der timeout, use o Render acima.
+
+NOVIDADES DA v4 (movimento, armas, mapas, desempenho)
+  PARA ATUALIZAR: suba o frag.html E o server.py novos no GitHub (Add file > Upload files > commit).
+  O jogo roda com o server.py antigo, mas o novo manda as mensagens sem atraso (TCP_NODELAY) e o anfitriao
+  envia cada atualizacao uma vez so para todos (menos upload para quem hospeda).
+
+  Movimento (seco e preciso)
+  - Fisica em 240 passos por segundo: pulo e velocidade iguais em qualquer fps.
+  - Chega na velocidade maxima em ~75 ms e para em ~65 ms (antes: ~185 ms e ~250 ms). Era isso o "input lag".
+  - Counter-strafe de verdade: apertou o lado oposto, em ~45 ms a arma ja esta 100% precisa.
+    A precisao agora depende da velocidade real (parado ou quase parado = tiro no lugar), como no CS.
+  - Pulo com buffer (apertou um pouco antes de tocar o chao, pula) e "coyote" (acabou de sair da borda, ainda pula).
+    Segurar espaco nao pula sozinho de novo.
+  - Crouch-jump: agachar no ar encolhe as pernas. Caixote de 1,2 m so sobe assim.
+  - Shift = andar devagar sem fazer barulho de passo para os outros. Agachado tambem e silencioso.
+  - Escada e degrau sem tranco na camera. Arma balanca menos e acompanha a mira (ajustavel: "Balanco da arma").
+  - Mouse cru e com menos atraso (pointerrawupdate + modo baixa latencia no canvas).
+  - Sensibilidade na MESMA escala do CS2 (da para digitar o numero do CS2; mostra o equivalente do Valorant).
+    Quem ja jogava nao sente diferenca: a sensibilidade antiga foi convertida automaticamente.
+  - Recuo com padrao fixo (da para aprender a puxar) e que volta sozinho quando voce solta o gatilho.
+  - Outros jogadores aparecem mais "em dia": 30 atualizacoes por segundo e atraso de interpolacao adaptativo (~70 ms).
+
+  Armas (cada um escolhe no lobby, na pausa ou ao morrer com as teclas 1 a 8)
+    Primarias: Carabina (M4, red dot) | Fuzil (AK, mata com um tiro na cabeca) | SMG (atira correndo)
+               Escopeta (9 chumbos, recarrega cartucho a cartucho) | DMR (semi-auto, luneta 2,5x) | Sniper
+    Secundarias: Pistola | Magnum (parado, um tiro na cabeca)
+    Todo mundo: faca + 1 granada (tecla 4; esquerdo = arremesso longo, direito = lob curto; quica nas paredes)
+    SMG, escopeta e pistolas perdem dano de longe. Placar final mostra HS%.
+
+  Facas: inspecionar (F) refeito do zero. A faca gira DENTRO da mao, no pivo certo:
+    karambit gira no anel do dedo, butterfly abre e fecha no pino (cabo solto dando a volta), a padrao vira e e jogada.
+
+  Mapas novos: Porto (containers e guindaste no por do sol), Nevasca (base no gelo, com neve caindo),
+    Vila (casinhas coloridas, becos e telhados), Duelo (arena pequena para x1 e 2x2). Sao 7 mapas no total.
+
+  Desempenho
+  - Sombras do cenario desenhadas uma vez por mapa (antes: todo quadro). Jogadores usam sombra de contato.
+    No mesmo mapa: ~20% menos chamadas de desenho e ~35% menos triangulos por quadro.
+  - Colisao com grade espacial (a fisica custa ~0,01 ms por quadro).
+
+  Configuracoes novas
+  - Mira personalizavel (cor, tamanho, espaco, espessura, ponto, contorno, abre ao correr), com previa.
+  - "Modo baixa latencia": ligado por padrao. Se a imagem tremer ou rasgar no seu PC, desligue.
+  - "Tela cheia ao jogar": ligado por padrao. Trava o teclado para Ctrl+W (agachar + andar) nao fechar a aba.
+    Esc abre o menu normalmente; para sair da tela cheia, segure Esc. Se fechar a aba sem querer, o navegador pergunta antes.
+
+  Dica de ping (opcional): no Render, a regiao Virginia (EUA leste) fica mais perto do Brasil que Oregon.
+  A regiao so se escolhe ao criar o servico; se o seu ja esta rodando, pode deixar como esta.
+
+CODIGO-FONTE (pasta fonte/)
+  O frag.html e gerado a partir de fonte/src (codigo legivel, um arquivo por assunto).
+  Nao precisa subir a pasta fonte/ para o Render. Para gerar o frag.html de novo:
+    1. Instale o Node.js (https://nodejs.org).
+    2. Dentro de fonte/:  npm install   e depois   node build.mjs
+    3. O arquivo novo sai em fonte/dist/frag.html. Copie para o lugar do frag.html.
